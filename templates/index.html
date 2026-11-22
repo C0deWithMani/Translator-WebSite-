@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="en" data-mode="gold">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark light" />
+    <title>Voice Of Mani — PDF, Live &amp; Image</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2224%22 fill=%22%230b0b0d%22/><path d=%22M25 42v16M38 30v40M50 20v60M62 33v34M75 42v16%22 stroke=%22%23d4af37%22 stroke-width=%228%22 stroke-linecap=%22round%22/></svg>"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700;800&family=Cormorant+Garamond:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <script>
+      /* apply the saved colour mode before the page paints (no flash) */
+      try {
+        if (localStorage.getItem("vm-multi") === "1") {
+          var r = document.documentElement;
+          r.setAttribute("data-mode", "multi");
+          r.setAttribute(
+            "data-theme",
+            localStorage.getItem("vm-theme") || "ocean",
+          );
+        }
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div class="bg-fixed" aria-hidden="true"></div>
+
+    <!-- ============ FIXED TOP BAR ============ -->
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark"><i data-ic="wave"></i></span>
+        <span class="brand-name">Voice Of Mani</span>
+      </div>
+
+      <nav id="mode-tabs" class="mode-tabs" aria-label="Mode">
+        <span id="mode-pill" class="tab-pill"></span>
+        <button class="mode-tab active" type="button" data-mode="pdf">
+          <i data-ic="file"></i><span>PDF to Speech</span>
+        </button>
+        <button class="mode-tab" type="button" data-mode="live">
+          <i data-ic="globe"></i><span>Live Translate</span>
+        </button>
+        <button class="mode-tab" type="button" data-mode="image">
+          <i data-ic="image"></i><span>Image Translate</span>
+        </button>
+      </nav>
+
+      <div class="theme-bar" id="theme-bar" data-interval="12000">
+        <div
+          class="theme-seg"
+          id="theme-seg"
+          role="group"
+          aria-label="Colour theme"
+        >
+          <span class="seg-pill" id="theme-pill"></span>
+          <button
+            type="button"
+            class="seg-btn active"
+            id="btn-gold"
+            data-set="gold"
+            aria-pressed="true"
+          >
+            <i data-ic="moon"></i><span>Dark</span>
+          </button>
+          <button
+            type="button"
+            class="seg-btn"
+            id="btn-light"
+            data-set="light"
+            aria-pressed="false"
+            title="Light theme: colours change by themselves"
+          >
+            <i data-ic="sun"></i><span>Light</span><em class="auto-bar"></em>
+          </button>
+        </div>
+          <span class="theme-name" id="theme-name"></span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ============ CENTERED STAGE ============ -->
+    <main class="shell">
+      <section class="hero">
+        <div class="eyebrow">NEURAL DOCUMENT INTELLIGENCE</div>
+        <h1><span class="h1-text">Text to Speech</span></h1>
+        <div class="hero-line" aria-hidden="true"><span></span></div>
+        <div class="idle-title" id="idle-title">Turn any PDF into speech</div>
+        <div class="idle-sub" id="idle-sub">
+          Upload a PDF → choose pages → pick a language → launch
+        </div>
+      </section>
+
+      <div id="notice" class="notice" hidden></div>
+      <div id="tess-warning" class="alert alert-warn" hidden>
+        <i data-ic="alert"></i
+        ><span
+          >Tesseract OCR was not found. Install it, then set the
+          <code>TESSERACT_CMD</code> variable or edit
+          <code>backend/config.py</code>.</span
+        >
+      </div>
+      <div id="top-error" class="alert alert-error" hidden></div>
+
+      <!-- ============ CENTER WORKBENCH ============ -->
+      <section class="card bench">
+        <div class="flow" id="flow" data-modes="pdf image">
+          <div class="flow-line"><span id="flow-fill"></span></div>
+          <div class="flow-node active">
+            <span class="n"><b>1</b><i data-ic="check"></i></span
+            ><label>Upload</label>
+          </div>
+          <div class="flow-node">
+            <span class="n"><b>2</b><i data-ic="check"></i></span
+            ><label>Configure</label>
+          </div>
+          <div class="flow-node">
+            <span class="n"><b>3</b><i data-ic="check"></i></span
+            ><label>Launch</label>
+          </div>
+        </div>
+
+        <!-- Upload: PDF -->
+        <div class="upload" data-modes="pdf">
+          <div class="collapse" id="pdf-collapse">
+            <div>
+              <label id="pdf-drop" class="drop" for="file">
+                <span class="drop-icon"><i data-ic="upload"></i></span>
+                <span class="drop-title"
+                  ><span class="t-idle">Drop your PDF here</span
+                  ><span class="t-drag">Release to upload</span></span
+                >
+                <span class="drop-sub">or click to browse your files</span>
+              </label>
+            </div>
+          </div>
+          <input id="file" type="file" accept="application/pdf,.pdf" hidden />
+
+          <div class="chip" id="pdf-chip" hidden>
+            <div class="chip-main">
+              <span class="chip-icon"><i data-ic="file"></i></span>
+              <div class="chip-text">
+                <div class="chip-name" id="pdf-name"></div>
+                <div class="chip-meta" id="pdf-meta"></div>
+              </div>
+              <button
+                class="chip-x"
+                id="pdf-remove"
+                type="button"
+                aria-label="Remove file"
+              >
+                <i data-ic="x"></i>
+              </button>
+            </div>
+            <div class="chip-bar"><span></span></div>
+            <div class="chip-preview" id="pdf-preview" hidden>
+              <img id="pdf-thumb" alt="First page preview" />
+              <div class="chip-preview-info">
+                <span class="pill" id="pdf-pages"></span
+                ><span class="chip-sub">Page 1 preview</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Upload: image -->
+        <div class="upload" data-modes="image" hidden>
+          <div class="collapse" id="img-collapse">
+            <div>
+              <label id="img-drop" class="drop" for="imgfile">
+                <span class="drop-icon"><i data-ic="upload"></i></span>
+                <span class="drop-title"
+                  ><span class="t-idle">Drop your image here</span
+                  ><span class="t-drag">Release to upload</span></span
+                >
+                <span class="drop-sub"
+                  >PNG · JPG · WEBP · BMP · TIFF — click to browse, or press
+                  Ctrl+V to paste</span
+                >
+              </label>
+            </div>
+          </div>
+          <input id="imgfile" type="file" accept="image/*" hidden />
+
+          <div class="chip" id="img-chip" hidden>
+            <div class="chip-main">
+              <span class="chip-icon"><i data-ic="image"></i></span>
+              <div class="chip-text">
+                <div class="chip-name" id="img-name"></div>
+                <div class="chip-meta" id="img-meta"></div>
+              </div>
+              <button
+                class="chip-x"
+                id="img-remove"
+                type="button"
+                aria-label="Remove image"
+              >
+                <i data-ic="x"></i>
+              </button>
+            </div>
+            <div class="chip-preview" id="img-preview" hidden>
+              <img id="img-thumb" alt="Image preview" class="wide" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Options (all modes) -->
+        <div class="opts">
+          <div class="opt" data-modes="pdf">
+            <div class="opt-head">
+              <span class="opt-ico"><i data-ic="pages"></i></span>
+              <div>
+                <div class="opt-title">Pages</div>
+                <div class="opt-sub" id="pages-hint">
+                  Leave blank to convert all pages
+                </div>
+              </div>
+            </div>
+            <input
+              id="pages"
+              type="text"
+              placeholder="e.g. 3  or  1-5  or blank = ALL"
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="opt" data-modes="image" hidden>
+            <div class="opt-head">
+              <span class="opt-ico"><i data-ic="scan"></i></span>
+              <div>
+                <div class="opt-title">Text language in image</div>
+                <div class="opt-sub">Only installed Tesseract languages</div>
+              </div>
+            </div>
+            <select id="ocr-lang">
+              <option value="eng">eng</option>
+            </select>
+          </div>
+
+          <div class="opt">
+            <div class="opt-head">
+              <span class="opt-ico"><i data-ic="speaker"></i></span>
+              <div>
+                <div class="opt-title">Voice engine</div>
+                <div class="opt-sub">How the speech is made</div>
+              </div>
+            </div>
+            <div class="tiles" id="engine-tiles">
+              <label class="tile on"
+                ><input type="radio" name="engine" value="edge" checked />
+                <span class="tile-ic"><i data-ic="cloud"></i></span
+                ><span class="tile-t">edge-tts</span
+                ><span class="tile-s">Online · Neural</span
+                ><span class="tile-ok"><i data-ic="check"></i></span
+              ></label>
+              <label class="tile"
+                ><input type="radio" name="engine" value="pyttsx3" />
+                <span class="tile-ic"><i data-ic="chip"></i></span
+                ><span class="tile-t">pyttsx3</span
+                ><span class="tile-s">Offline · Basic</span
+                ><span class="tile-ok"><i data-ic="check"></i></span
+              ></label>
+            </div>
+          </div>
+
+          <div class="opt">
+            <div class="opt-head">
+              <span class="opt-ico"><i data-ic="translate"></i></span>
+              <div>
+                <div class="opt-title">Target language</div>
+                <div class="opt-sub">Translate into</div>
+              </div>
+            </div>
+            <select id="language">
+              <option value="None">None</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="collapse closed" id="voice-collapse">
+          <div>
+            <div class="voice-box">
+              <div class="mini-label">Offline voice settings (pyttsx3)</div>
+              <div class="voice-grid">
+                <div class="seg" id="voice-seg">
+                  <label class="on"
+                    ><input
+                      type="radio"
+                      name="voice"
+                      value="Male"
+                      checked
+                    /><span>Male</span></label
+                  >
+                  <label
+                    ><input type="radio" name="voice" value="Female" /><span
+                      >Female</span
+                    ></label
+                  >
+                </div>
+                <div>
+                  <div class="slider-row">
+                    <span>Speed</span><output id="speed-out">150</output>
+                  </div>
+                  <input
+                    id="speed"
+                    class="range"
+                    type="range"
+                    min="80"
+                    max="200"
+                    step="1"
+                    value="150"
+                  />
+                </div>
+                <div>
+                  <div class="slider-row">
+                    <span>Volume</span><output id="volume-out">1.0</output>
+                  </div>
+                  <input
+                    id="volume"
+                    class="range"
+                    type="range"
+                    min="0.1"
+                    max="1.0"
+                    step="0.1"
+                    value="1.0"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="launch-wrap" data-modes="pdf image">
+          <button
+            id="launch"
+            class="btn btn-launch"
+            type="button"
+            data-state="idle"
+          >
+            <span class="fill" id="launch-fill"></span>
+            <span class="lbl"
+              ><i data-ic="bolt" id="launch-ic"></i
+              ><span id="launch-text">Launch conversion</span></span
+            >
+          </button>
+        </div>
+      </section>
+
+      <!-- ===== PDF + IMAGE results ===== -->
+      <section id="panel-doc">
+        <section id="idle" class="idle">
+          <div class="idle-cards">
+            <div class="feature-card tilt">
+              <span class="fc-ico"><i data-ic="scan"></i></span>
+              <div class="fc-title">OCR extract</div>
+              <div class="fc-sub">Tesseract powered</div>
+            </div>
+            <div class="feature-card tilt">
+              <span class="fc-ico"><i data-ic="translate"></i></span>
+              <div class="fc-title">Translate</div>
+              <div class="fc-sub">70+ languages</div>
+            </div>
+            <div class="feature-card tilt">
+              <span class="fc-ico"><i data-ic="speaker"></i></span>
+              <div class="fc-title">Neural TTS</div>
+              <div class="fc-sub">Microsoft Edge voices</div>
+            </div>
+            <div class="feature-card tilt">
+              <span class="fc-ico"><i data-ic="package"></i></span>
+              <div class="fc-title">Export ZIP</div>
+              <div class="fc-sub">Text + audio bundle</div>
+            </div>
+          </div>
+        </section>
+
+        <section id="run" hidden>
+          <div class="overall">
+            <div class="overall-top">
+              <span id="overall-label">Starting…</span
+              ><span id="overall-pct">0%</span>
+            </div>
+            <div class="overall-track">
+              <div class="overall-fill" id="overall-fill"></div>
+            </div>
+          </div>
+          <div id="mission" class="mission"></div>
+          <div id="steps" class="timeline"></div>
+          <div id="notes"></div>
+          <div id="complete" class="complete" hidden></div>
+
+          <section id="output" hidden>
+            <div class="card out-card">
+              <div class="tabs" id="out-tabs" role="tablist">
+                <span class="tab-ind" id="out-ind"></span>
+                <button
+                  class="tab"
+                  type="button"
+                  data-tab="image"
+                  id="tabbtn-image"
+                  hidden
+                >
+                  <i data-ic="image"></i>Image
+                </button>
+                <button class="tab active" type="button" data-tab="text">
+                  <i data-ic="text"></i>Extracted text
+                </button>
+                <button class="tab" type="button" data-tab="trans">
+                  <i data-ic="translate"></i>Translation
+                </button>
+                <button class="tab" type="button" data-tab="audio">
+                  <i data-ic="speaker"></i>Audio
+                </button>
+              </div>
+
+              <div class="tab-panel" id="tab-image" hidden>
+                <label class="check"
+                  ><input id="ov-toggle" type="checkbox" checked /><span
+                    >Show translated text on the image</span
+                  ></label
+                >
+                <div id="img-stage" class="img-stage"></div>
+                <div class="caption" id="img-caption"></div>
+              </div>
+
+              <div class="tab-panel" id="tab-text">
+                <div class="two-col">
+                  <div>
+                    <div class="mini-label">Raw OCR</div>
+                    <textarea id="raw-text" readonly rows="14"></textarea>
+                  </div>
+                  <div>
+                    <div class="mini-label">Cleaned text</div>
+                    <textarea id="clean-text" readonly rows="14"></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <div class="tab-panel" id="tab-trans" hidden>
+                <div id="trans-box" hidden>
+                  <div class="mini-label" id="trans-label">Translation</div>
+                  <textarea id="trans-text" readonly rows="16"></textarea>
+                </div>
+                <div id="trans-none" class="empty">
+                  No translation selected.
+                </div>
+              </div>
+
+              <div class="tab-panel" id="tab-audio" hidden>
+                <div class="audio-card" id="audio-card">
+                  <div class="eq" aria-hidden="true">
+                    <span></span><span></span><span></span><span></span
+                    ><span></span>
+                  </div>
+                  <div class="audio-main">
+                    <div class="mini-label">Neural audio output</div>
+                    <audio id="player" controls preload="metadata"></audio>
+                    <div class="caption" id="voice-caption"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <a id="download" class="btn btn-download" href="#"
+              ><i data-ic="download"></i><span>Download complete package</span
+              ><small>Text + translation + audio</small></a
+            >
+
+            <div class="section-title">
+              <i data-ic="target"></i>Quality metrics
+            </div>
+            <div class="metrics">
+              <div class="metric" title="Word Error Rate (lower = better)">
+                <div class="m-label">WER</div>
+                <div class="m-value" id="m-wer">-</div>
+              </div>
+              <div class="metric" title="Character Error Rate (lower = better)">
+                <div class="m-label">CER</div>
+                <div class="m-value" id="m-cer">-</div>
+              </div>
+              <div class="metric">
+                <div class="m-label">Word accuracy</div>
+                <div class="m-value" id="m-acc">-</div>
+              </div>
+              <div class="metric">
+                <div class="m-label" id="m-pages-label">Pages</div>
+                <div class="m-value" id="m-pages">-</div>
+              </div>
+              <div class="metric">
+                <div class="m-label">Process time</div>
+                <div class="m-value" id="m-time">-</div>
+              </div>
+            </div>
+            <div class="caption" id="metrics-caption">
+              WER &amp; CER compare original vs translated text. 0 = no
+              translation selected (identical).
+            </div>
+
+            <div class="section-title">
+              <i data-ic="star"></i>Subjective evaluation
+            </div>
+            <div class="two-col">
+              <div class="eval-card">
+                <div class="eval-title">MOS · Mean Opinion Score</div>
+                <div class="caption">Rate the overall audio naturalness</div>
+                <div
+                  class="stars"
+                  id="mos-stars"
+                  role="radiogroup"
+                  aria-label="MOS rating"
+                ></div>
+                <div class="eval-text" id="mos-text">3 — Fair</div>
+                <button id="mos-submit" class="btn btn-primary" type="button">
+                  Submit MOS
+                </button>
+              </div>
+              <div class="eval-card">
+                <div class="eval-title">CMOS · Comparative Score</div>
+                <div class="caption">Compare against a reference system</div>
+                <input
+                  id="cmos"
+                  class="range"
+                  type="range"
+                  min="-3"
+                  max="3"
+                  step="1"
+                  value="0"
+                />
+                <div class="eval-text" id="cmos-text">0 — Equal</div>
+                <button id="cmos-submit" class="btn btn-primary" type="button">
+                  Submit CMOS
+                </button>
+              </div>
+            </div>
+          </section>
+        </section>
+      </section>
+
+      <!-- ===== LIVE ===== -->
+      <section id="panel-live" hidden>
+        <div class="card live-bar">
+          <div class="live-field">
+            <div class="mini-label">Speak in</div>
+            <select id="live-src"></select>
+          </div>
+          <div class="live-field">
+            <div class="mini-label">Voice output</div>
+            <select id="live-voice">
+              <option value="server">Server voice (Edge / offline)</option>
+              <option value="browser">Browser voice (Edge / Chrome)</option>
+            </select>
+          </div>
+          <button id="mic-btn" class="btn btn-mic" type="button">
+            <i data-ic="mic" id="mic-ic"></i><span id="mic-lbl">Start mic</span>
+          </button>
+          <label class="switch"
+            ><input id="auto-speak" type="checkbox" /><span class="track"></span
+            ><span class="sw-text">Auto-speak</span></label
+          >
+          <button id="live-clear" class="btn btn-ghost" type="button">
+            <i data-ic="trash"></i>Clear
+          </button>
+        </div>
+
+        <div id="live-hint" class="alert alert-warn" hidden>
+          <i data-ic="globe"></i
+          ><span
+            >Choose a <strong>Target language</strong> above to start
+            translating.</span
+          >
+        </div>
+        <div id="mic-note" class="caption"></div>
+
+        <div class="two-col live-cols">
+          <div class="card">
+            <div class="card-head">
+              <span class="card-ico"><i data-ic="text"></i></span>
+              <div>
+                <div class="card-title">Your text</div>
+                <div class="card-sub">
+                  Any language is detected automatically
+                </div>
+              </div>
+            </div>
+            <textarea
+              id="live-in"
+              rows="12"
+              placeholder="Type here, or press the mic and speak…"
+            ></textarea>
+            <div class="interim">
+              <div class="eq" id="live-eq" hidden aria-hidden="true">
+                <span></span><span></span><span></span><span></span
+                ><span></span>
+              </div>
+              <span id="live-interim"></span>
+            </div>
+          </div>
+          <div class="card" id="live-out-card">
+            <div class="card-head">
+              <span class="card-ico"><i data-ic="translate"></i></span>
+              <div>
+                <div class="card-title" id="live-out-label">Translation</div>
+                <div class="card-sub">Updates live</div>
+              </div>
+              <div class="eq speaking-eq" aria-hidden="true">
+                <span></span><span></span><span></span><span></span
+                ><span></span>
+              </div>
+            </div>
+            <textarea
+              id="live-out"
+              readonly
+              rows="12"
+              placeholder="The translation appears here, live…"
+            ></textarea>
+            <div class="live-actions">
+              <button id="live-speak" class="btn btn-ghost" type="button">
+                <i data-ic="speaker"></i>Speak translation
+              </button>
+              <button id="live-copy" class="btn btn-ghost" type="button">
+                <i data-ic="copy"></i>Copy
+              </button>
+              <span id="live-status" class="live-status"></span>
+            </div>
+          </div>
+        </div>
+        <div id="live-error" class="alert live-error" hidden></div>
+        <div class="caption">
+          Auto-speak reads each sentence you say with the mic, or each line you
+          finish with Enter. The mic pauses while the translation is spoken, so
+          it does not hear itself.
+        </div>
+      </section>
+
+      <footer class="foot">Reserved by · Mani</footer>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  </body>
+</html>

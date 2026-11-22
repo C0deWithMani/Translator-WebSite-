@@ -1,0 +1,2 @@
+DOCUMENT PROCESSING & Textto Speech Document Upload Page Selection Drortesccec: ane TTS Engine AWAITING DOCUMENT UPLOAD.
+Upload 8 POF - Select pages Choose language - Launch OUTPUT VIEWER Page Selection . 2) & Text to Speec STEP 1 OCREXTRACTION (ao STEP 2 NOISE FILTERING 1-84 words extracted from 1 page(s) Target Language ( 1 Cleaned - 81 clean words retained I 3 noise tokens removed Cebuano STEP 3 NEURAL TRANSLATION
