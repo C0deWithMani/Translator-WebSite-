@@ -8,6 +8,8 @@ Same project as `voiceforge_web`, with two new tabs. Your original `main.py` is 
 | 🌐 Live Translate  | Type or speak. Translation appears live. Can speak the result aloud.                                              |
 | 🖼 Image Translate | Upload / paste a picture. Reads the text, translates it, **draws the translation on the picture**, and speaks it. |
 
+| 🌐 https://tesseractocr.org/ | Download tesseract software (important)
+
 ## Folder map
 
 ```
